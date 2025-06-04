@@ -7,15 +7,12 @@
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background: transparent;
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            width: fit-content;
+            height: fit-content;
         }
-
         .clock-widget {
             background: #5a9b7a;
             border-radius: 16px;
@@ -25,29 +22,26 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             min-width: 200px;
         }
-
         .time {
             font-size: 80px;
             font-weight: bold;
             margin: 0;
             line-height: 1;
             letter-spacing: -1px;
-            color: rgb(227, 227, 227);
+            color: rgb(239, 236, 232);
         }
-
         .period {
             font-size: 32px;
             font-weight: bold;
             margin-left: 8px;
-            color: rgb(227, 227, 227);
+            color: rgb(239, 236, 232);
         }
-
         .date {
             font-size: 18px;
             font-weight: bold;
             margin: 8px 0 0 0;
             opacity: 0.9;
-            color: rgb(227, 227, 227);
+            color: rgb(239, 236, 232);
         }
     </style>
 </head>
@@ -59,42 +53,85 @@
         </div>
         <div class="date" id="date">Wed, June 4</div>
     </div>
-
     <script>
         function updateClock() {
-            const now = new Date();
-            
-            // Format time
-            let hours = now.getHours();
-            const minutes = now.getMinutes();
-            const period = hours >= 12 ? 'pm' : 'am';
-            
-            // Convert to 12-hour format
-            hours = hours % 12;
-            hours = hours ? hours : 12; // 0 should be 12
-            
-            const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`;
-            
-            // Format date
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            const dayName = days[now.getDay()];
-            const monthName = months[now.getMonth()];
-            const date = now.getDate();
-            
-            const dateString = `${dayName}, ${monthName} ${date}`;
-            
-            // Update elements
-            document.getElementById('time').textContent = timeString;
-            document.getElementById('period').textContent = period;
-            document.getElementById('date').textContent = dateString;
+            try {
+                const now = new Date();
+                
+                // Format time
+                let hours = now.getHours();
+                const minutes = now.getMinutes();
+                const period = hours >= 12 ? 'pm' : 'am';
+                
+                // Convert to 12-hour format
+                hours = hours % 12;
+                hours = hours ? hours : 12; // 0 should be 12
+                
+                const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`;
+                
+                // Format date
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                const dayName = days[now.getDay()];
+                const monthName = months[now.getMonth()];
+                const date = now.getDate();
+                
+                const dateString = `${dayName}, ${monthName} ${date}`;
+                
+                // Update elements with fallback checks
+                const timeEl = document.getElementById('time');
+                const periodEl = document.getElementById('period');
+                const dateEl = document.getElementById('date');
+                
+                if (timeEl) timeEl.textContent = timeString;
+                if (periodEl) periodEl.textContent = period;
+                if (dateEl) dateEl.textContent = dateString;
+                
+                // Debug log (will show in browser console if available)
+                console.log('Clock updated:', timeString, period, dateString);
+                
+            } catch (error) {
+                console.error('Clock update failed:', error);
+            }
         }
-
-        // Update immediately and then every second
-        updateClock();
-        setInterval(updateClock, 1000);
+        
+        // Multiple update strategies for different environments
+        function startClock() {
+            updateClock(); // Initial update
+            
+            // Try different timer approaches
+            if (typeof setInterval !== 'undefined') {
+                setInterval(updateClock, 1000);
+            }
+            
+            // Fallback: use setTimeout chain
+            function updateWithTimeout() {
+                updateClock();
+                setTimeout(updateWithTimeout, 1000);
+            }
+            updateWithTimeout();
+            
+            // Also try requestAnimationFrame for some environments
+            function updateWithRAF() {
+                updateClock();
+                if (typeof requestAnimationFrame !== 'undefined') {
+                    setTimeout(() => requestAnimationFrame(updateWithRAF), 1000);
+                }
+            }
+            updateWithRAF();
+        }
+        
+        // Start when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startClock);
+        } else {
+            startClock();
+        }
+        
+        // Also try starting on window load
+        window.addEventListener('load', startClock);
     </script>
 </body>
 </html>
